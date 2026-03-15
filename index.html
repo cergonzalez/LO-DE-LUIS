@@ -4,6 +4,15 @@
 <meta charset="UTF-8">
 <title>Sistema Restaurante Lo de Luis</title>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script>
+const supabase = window.supabase.createClient(
+"https://pdublashrqxeopvrhdox.supabase.co",
+"sb_publishable_dfdtvna1OTynY4CFHfmSDA_JhbV9SbG"
+);
+</script>
+
 <style>
 
 body{
@@ -56,21 +65,12 @@ font-weight:bold;
 color:white;
 }
 
-.libre{
-background:#2ecc71;
-}
-
-.abierta{
-background:#f1c40f;
-color:black;
-}
-
-.enviada{
-background:#e74c3c;
-}
+.libre{background:#2ecc71;}
+.abierta{background:#f1c40f;color:black;}
+.enviada{background:#e74c3c;}
 
 .mesa.activa{
-outline:4px solid #000;
+outline:4px solid black;
 }
 
 button{
@@ -99,6 +99,11 @@ background:white;
 padding:10px;
 margin-bottom:10px;
 border-radius:10px;
+}
+
+h3{
+margin-top:15px;
+border-bottom:1px solid #ddd;
 }
 
 </style>
@@ -133,7 +138,6 @@ Mozo:
 <div class="panel">
 
 <h2>Mesas</h2>
-
 <div class="mesas" id="mesas"></div>
 
 </div>
@@ -142,41 +146,50 @@ Mozo:
 
 <h2>Menú</h2>
 
+<h3>🍕 Pizzas</h3>
 <button onclick="add('Pizza Mozzarella',20000)">Pizza Mozzarella $20000</button>
 <button onclick="add('Pizza Jamón y Morrón',24000)">Pizza Jamón y Morrón $24000</button>
 <button onclick="add('Pizza Jamón',23000)">Pizza Jamón $23000</button>
 <button onclick="add('Pizza Napolitana',23000)">Pizza Napolitana $23000</button>
 
+<h3>🥟 Empanadas</h3>
 <button onclick="add('Empanada Jamón y Queso',4000)">Empanada Jamón y Queso $4000</button>
 <button onclick="add('Empanada Carne',4000)">Empanada Carne $4000</button>
 <button onclick="add('Empanada Pollo',4000)">Empanada Pollo $4000</button>
 
+<h3>🍟 Papas</h3>
 <button onclick="add('Papas fritas',8000)">Papas fritas $8000</button>
 <button onclick="add('Papas Cheddar',10000)">Papas Cheddar $10000</button>
 <button onclick="add('Papas Cheddar Bacon',12500)">Papas Cheddar Bacon $12500</button>
 
+<h3>🍔 Hamburguesas</h3>
 <button onclick="add('Hamburguesa Carne',11500)">Hamburguesa Carne $11500</button>
 <button onclick="add('Hamburguesa Completa',14500)">Hamburguesa Completa $14500</button>
 <button onclick="add('Hamburguesa Pollo',10500)">Hamburguesa Pollo $10500</button>
 
+<h3>🥤 Bebidas</h3>
 <button onclick="add('Coca Cola',5000)">Coca Cola $5000</button>
 <button onclick="add('Agua',3000)">Agua $3000</button>
 <button onclick="add('Agua con gas',3000)">Agua con gas $3000</button>
 <button onclick="add('Agua saborizada',4000)">Agua saborizada $4000</button>
 
+<h3>🍺 Cervezas</h3>
 <button onclick="add('Heineken',12000)">Heineken $12000</button>
 <button onclick="add('Imperial',10000)">Imperial $10000</button>
 <button onclick="add('Amstel',10000)">Amstel $10000</button>
 
+<h3>☕ Cafetería</h3>
 <button onclick="add('Café',4000)">Café $4000</button>
 <button onclick="add('Cortado',4000)">Cortado $4000</button>
 <button onclick="add('Té',3000)">Té $3000</button>
 
+<h3>🍰 Postres</h3>
 <button onclick="add('Pastaflora Membrillo',4000)">Pastaflora Membrillo $4000</button>
 <button onclick="add('Pastaflora Batata',4000)">Pastaflora Batata $4000</button>
 <button onclick="add('Ricota',4000)">Ricota $4000</button>
 <button onclick="add('Torta Chocolate',5000)">Torta Chocolate $5000</button>
 
+<h3>🍹 Tragos</h3>
 <button onclick="add('Fernet',9000)">Fernet $9000</button>
 <button onclick="add('Aperol',9000)">Aperol $9000</button>
 <button onclick="add('Campari',9000)">Campari $9000</button>
@@ -195,7 +208,6 @@ Total $<span id="total">0</span>
 </p>
 
 <button onclick="enviarComanda()">Enviar Comanda</button>
-
 <button onclick="cerrarMesa()">Cerrar Mesa</button>
 
 </div>
@@ -223,6 +235,31 @@ let mesas = JSON.parse(localStorage.getItem("mesas")) || {}
 let historial = JSON.parse(localStorage.getItem("historial")) || []
 
 let mesaActual=null
+
+cargarServidor()
+
+async function cargarServidor(){
+
+const { data } = await supabase
+.from("mesas")
+.select("*")
+
+if(data){
+
+data.forEach(m=>{
+
+mesas[m.id]={
+items:m.items || [],
+total:m.total || 0,
+mozo:m.mozo || "",
+estado:m.estado || "libre"
+}
+
+})
+
+}
+
+}
 
 for(let i=1;i<=30;i++){
 
@@ -271,7 +308,6 @@ mesas[n].mozo=mozo
 mesas[n].estado="abierta"
 
 guardar()
-
 actualizarMesas()
 
 }
@@ -307,16 +343,16 @@ function add(nombre,precio){
 if(!mesaActual)return
 
 mesas[mesaActual].items.push({nombre,precio})
-
 mesas[mesaActual].total+=precio
 
 guardar()
-
 update()
 
 }
 
 function update(){
+
+if(!mesaActual)return
 
 let lista=document.getElementById("lista")
 
@@ -325,7 +361,6 @@ lista.innerHTML=""
 mesas[mesaActual].items.forEach(p=>{
 
 let li=document.createElement("li")
-
 li.innerText=p.nombre+" $"+p.precio
 
 lista.appendChild(li)
@@ -333,6 +368,26 @@ lista.appendChild(li)
 })
 
 document.getElementById("total").innerText=mesas[mesaActual].total
+
+}
+
+async function guardar(){
+
+localStorage.setItem("mesas",JSON.stringify(mesas))
+
+for(let i in mesas){
+
+await supabase
+.from("mesas")
+.upsert({
+id:i,
+mozo:mesas[i].mozo,
+estado:mesas[i].estado,
+total:mesas[i].total,
+items:mesas[i].items
+})
+
+}
 
 }
 
@@ -353,17 +408,11 @@ hora:new Date().toLocaleTimeString()
 mesas[mesaActual]={items:[],total:0,mozo:"",estado:"libre"}
 
 guardar()
-
 localStorage.setItem("historial",JSON.stringify(historial))
 
 actualizarMesas()
-
 update()
 
-}
-
-function guardar(){
-localStorage.setItem("mesas",JSON.stringify(mesas))
 }
 
 function enviarComanda(){
@@ -373,13 +422,11 @@ let pedido=mesas[mesaActual]
 pedido.estado="enviada"
 
 guardar()
-
 actualizarMesas()
 
 let texto="COMANDA LO DE LUIS\n"
 
 texto+="Mesa "+mesaActual+"\n"
-
 texto+="Mozo: "+pedido.mozo+"\n\n"
 
 pedido.items.forEach(p=>{
@@ -388,7 +435,7 @@ texto+=p.nombre+" $"+p.precio+"\n"
 
 texto+="\nTOTAL $"+pedido.total
 
-window.open("https://wa.me/5491159964173?text="+encodeURIComponent(texto))
+window.open("https://wa.me/?text="+encodeURIComponent(texto))
 
 }
 
@@ -396,94 +443,6 @@ function modoAdmin(){
 
 document.getElementById("mozos").style.display="none"
 document.getElementById("admin").style.display="block"
-
-let panel=document.getElementById("panelMesas")
-panel.innerHTML=""
-
-for(let m in mesas){
-
-let mesa=mesas[m]
-
-if(mesa.total>0){
-
-let div=document.createElement("div")
-div.className="caja"
-
-let html="<b>Mesa "+m+"</b><br>"
-html+="Mozo: "+mesa.mozo+"<br>"
-
-mesa.items.forEach(i=>{
-html+=i.nombre+" $"+i.precio+"<br>"
-})
-
-html+="<b>Total $"+mesa.total+"</b>"
-
-div.innerHTML=html
-
-panel.appendChild(div)
-
-}
-
-}
-
-mostrarHistorial()
-estadisticas()
-
-}
-
-function mostrarHistorial(){
-
-let hist=document.getElementById("historial")
-
-hist.innerHTML=""
-
-historial.forEach(h=>{
-
-let div=document.createElement("div")
-
-div.className="caja"
-
-let html="<b>Mesa "+h.mesa+"</b><br>"
-html+="Mozo: "+h.mozo+"<br>"
-
-h.items.forEach(i=>{
-html+=i.nombre+" $"+i.precio+"<br>"
-})
-
-html+="<b>Total $"+h.total+"</b><br>"+h.hora
-
-div.innerHTML=html
-
-hist.appendChild(div)
-
-})
-
-}
-
-function estadisticas(){
-
-let total=0
-let mozos={}
-
-historial.forEach(h=>{
-
-total+=h.total
-
-if(!mozos[h.mozo]){
-mozos[h.mozo]=0
-}
-
-mozos[h.mozo]+=h.total
-
-})
-
-let html="Total del día $"+total+"<br><br>"
-
-for(let m in mozos){
-html+=m+" vendió $"+mozos[m]+"<br>"
-}
-
-document.getElementById("estadisticas").innerHTML=html
 
 }
 
